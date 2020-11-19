@@ -26,7 +26,7 @@
                     </v-btn>
                     <input type="checkbox" 
                         v-model="item.delete" 
-                        style="margin-left: 50px;" @change="checked(item)">
+                        style="margin-left: 50px;" @change="checkbox(item)">
                 </template>
                 <template v-slot:[`item.priority`]="{ item }">
                     <td>
@@ -80,7 +80,25 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogdelete" persistent max-width="600px">
+        
+        <v-card>
+            <v-card-title>
+                <h4>Delete Multiple</h4>
+            </v-card-title>
+            <v-card-text align="left">
+                <ul v-for="(todos, i) in selected" :key="i">
+                    <li>
+                       {{todos.task}} 
+                    </li>
+                </ul>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="red" dark @click="hapusSemua">
+                Hapus Semua 
+            </v-btn>
+            </v-card-actions>
+        </v-card>
+        <v-dialog v-model="dialogDelete" persistent max-width="600px">
             <v-card>
                 <v-card-title>
                     <span class="headline">Yakin ingin menghapus?</span>
@@ -92,23 +110,6 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-card>
-            <v-card-title>
-                <h3>Delete Multiple</h3>
-            </v-card-title>
-            <v-card-text align="left">
-                <ul v-for="(todos, i) in selected" :key="i">
-                    <li>
-                       {{todos.task}} 
-                    </li>
-                </ul>
-            </v-card-text>
-            <v-card-actions>
-                <v-btn color="red" dark @click="hapusAll">
-                Hapus Semua 
-            </v-btn>
-            </v-card-actions>
-        </v-card>
     </v-main>
 </template>
 <script>
@@ -121,7 +122,6 @@ export default {
 			dialogDelete: false,
             dialogFinished: false,
             tambah:true,
-			editIndex: -1,
 			headers: [
 				{
 					text: "Task",
@@ -171,17 +171,16 @@ export default {
 	},
 	methods: {
 		save() {
-			if (this.editIndex > -1) this.todos.splice(this.editIndex, 1, this.formTodo);
-			else this.todos.push(this.formTodo);
-			this.resetForm();
-			this.dialog = false;
-			this.editIndex = -1;
+			this.todos.push(this.formTodo);
+            this.resetForm();
+            this.dialog = false;
 		},
 		cancel() {
 			this.resetForm();
 			this.dialog = false;
-            this.editIndex = -1;
+            this.edititem = null;
             this.tambah = true;
+            this.dialogDelete = false;
 		},
 		resetForm() {
 			this.formTodo = {
@@ -192,34 +191,36 @@ export default {
 		},
 		editItem(item) {
             this.editIndex = this.todos.indexOf(item);
-            this.tambah = true;
+            this.tambah = false;
 
 			this.formTodo = {
 				task: item.task,
 				priority: item.priority,
 				note: item.note,
-			};
-			this.dialog = true;
-		},
-		deleteItem(item) {
-			this.editIndex = this.todos.indexOf(item);
-			this.dialogDelete = true;
-		},
-		cancelDelete() {
-			this.dialogDelete = false;
-			this.editIndex = -1;
-		},
-		confirmDelete() {
-			this.finishedTodos.push(this.todos[this.editIndex]);
-			this.todos.splice(this.editIndex, 1);
-			this.dialogDelete = false;
-			this.editIndex = -1;
+            };
+            
+            this.edititem = item;
+            this.dialog = true;  
         },
-        hapusAll(){
+        edit(formTodo){
+            this.edititem.task = formTodo.task;
+            this.edititem.priority = formTodo.priority;
+            this.edititem.note = formTodo.note;
+            this.cancel();
+        },
+		deleteItem(item) {
+			this.dialogDelete = true;
+            this.edititem = item;
+		},
+		confirmdelete() {
+			this.todos.splice(this.todos.indexOf(this.edititem), 1);
+            this.dialogDelete = false;
+        },
+        hapusSemua(){
             this.todos = this.todos.filter(del=>!this.selected.includes(del));
             this.selected = [];
         },
-        checked(item){
+        checkbox(item){
             if(this.selected.includes(item)) {
                 this.selected.splice(this.selected.indexOf(item), 1);
             } else {

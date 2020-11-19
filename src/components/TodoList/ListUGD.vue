@@ -150,7 +150,7 @@ export default {
             this.edititem = null;
             this.tambah = true;
             this.dialogdelete = false;
-
+            
         },
         resetForm() {
             this.formTodo = {
@@ -160,6 +160,7 @@ export default {
             };
         },
         editItem(item) {
+            this.editIndex = this.todos.indexOf(item);
             this.tambah = false;
             this.formTodo = {
                 task: item.task,
@@ -183,17 +184,6 @@ export default {
             this.todos.splice(this.todos.indexOf(this.edititem), 1);
             this.dialogdelete = false;
         },
-        hapusAll(){
-            this.todos = this.todos.filter(del=>!this.selected.includes(del));
-            this.selected = [];
-        },
-        checked(item){
-            if(this.selected.includes(item)) {
-                this.selected.splice(this.selected.indexOf(item), 1);
-            } else {
-                this.selected.push(item);
-            }
-        }
-	},
+    },
 };
 </script>
