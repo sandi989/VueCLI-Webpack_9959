@@ -24,6 +24,9 @@
                     <v-btn small @click="deleteItem(item)">
                         delete
                     </v-btn>
+                    <input type="checkbox" 
+                        v-model="item.delete" 
+                        style="margin-left: 50px;" @change="checked(item)">
                 </template>
                 <template v-slot:[`item.priority`]="{ item }">
                     <td>
@@ -89,99 +92,128 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-card>
+            <v-card-title>
+                <h3>Delete Multiple</h3>
+            </v-card-title>
+            <v-card-text align="left">
+                <ul v-for="(todos, i) in selected" :key="i">
+                    <li>
+                       {{todos.task}} 
+                    </li>
+                </ul>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="red" dark @click="hapusAll">
+                Hapus Semua 
+            </v-btn>
+            </v-card-actions>
+        </v-card>
     </v-main>
 </template>
 <script>
 export default {
-    name: "List",
-    data() {
-        return {
-            search: null,
-            dialog: false,
-            editTodo: null,
-            edititem: null,
-            tambah: true,
-            dialogdelete:false,
-            headers: [
-                {
-                    text: "Task",
-                    align: "start",
-                    sortable: true,
-                    value: "task",
-                },
-                
-                { text: "Priority", value: "priority" },
-                { text: "Note", value: "note" },
-                { text: "Actions", value:"actions" },
-            ],
-            todos: [
-                {
-                    task: "Bernafas",
-                    priority: "Penting",
-                    note: "huffttt",
-                },
-                {
-                    task: "Nongkrong",
-                    priority: "Tidak Penting",
-                    note: "bersama tman2",
-                },
-                {
-                    task: "Masak",
-                    priority: "Biasa",
-                    note: "masak air 500ml",
-                },
-            ],
-            formTodo: {
-                task: null,
-                priority: null,
-                note: null,
+	name: "List",
+	data() {
+		return {
+			search: null,
+			dialog: false,
+			dialogDelete: false,
+            dialogFinished: false,
+            tambah:true,
+			editIndex: -1,
+			headers: [
+				{
+					text: "Task",
+					align: "start",
+					sortable: true,
+					value: "task",
+				},
+				{ text: "Priority", value: "priority" },
+				{ text: "Note", value: "note" },
+				{ text: "Actions", value: "actions" },
+			],
+			headersFinished: [
+				{
+					text: "Task",
+					align: "start",
+					sortable: true,
+					value: "task",
+				},
+				{ text: "Priority", value: "priority" },
+				{ text: "Note", value: "note" },
+			],
+			todos: [
+				{
+					task: "Bernafas",
+					priority: "Penting",
+					note: "huffttt",
+				},
+				{
+					task: "Nongkrong",
+					priority: "Tidak penting",
+					note: "bersama tman2",
+				},
+				{
+					task: "Masak",
+					priority: "Biasa",
+					note: "masak air 500ml",
+				},
+			],
+			finishedTodos: [],
+			formTodo: {
+				task: null,
+				priority: null,
+				note: null,
             },
-        };
-    },
-    methods: {
-        save() {
-            this.todos.push(this.formTodo);
-            this.resetForm();
-            this.dialog = false;
-        },
-        cancel() {
-            this.resetForm();
-            this.dialog = false;
-            this.edititem = null;
+            selected: [],
+		};
+	},
+	methods: {
+		save() {
+			if (this.editIndex > -1) this.todos.splice(this.editIndex, 1, this.formTodo);
+			else this.todos.push(this.formTodo);
+			this.resetForm();
+			this.dialog = false;
+			this.editIndex = -1;
+		},
+		cancel() {
+			this.resetForm();
+			this.dialog = false;
+            this.editIndex = -1;
             this.tambah = true;
-            this.dialogdelete = false;
+		},
+		resetForm() {
+			this.formTodo = {
+				task: null,
+				priority: null,
+				note: null,
+			};
+		},
+		editItem(item) {
+            this.editIndex = this.todos.indexOf(item);
+            this.tambah = true;
 
-        },
-        resetForm() {
-            this.formTodo = {
-                task: null,
-                priority: null,
-                note: null,
-            };
-        },
-        editItem(item) {
-            this.tambah = false;
-            this.formTodo = {
-                task: item.task,
-                priority: item.priority,
-                note: item.note,
-            };
-            this.dialog = true;
-            this.edititem = item;
-        },
-        edit(formTodo){
-            this.edititem.task = formTodo.task;
-            this.edititem.priority = formTodo.priority;
-            this.edititem.note = formTodo.note;
-            this.cancel();
-        },
-        deleteItem(item) {
-            this.dialogdelete = true;
-            this.edititem = item;
-        },
-        confirmdelete() {
-            this.todos.splice(this.todos.indexOf(this.edititem), 1);
-            this.dialogdelete = false;
+			this.formTodo = {
+				task: item.task,
+				priority: item.priority,
+				note: item.note,
+			};
+			this.dialog = true;
+		},
+		deleteItem(item) {
+			this.editIndex = this.todos.indexOf(item);
+			this.dialogDelete = true;
+		},
+		cancelDelete() {
+			this.dialogDelete = false;
+			this.editIndex = -1;
+		},
+		confirmDelete() {
+			this.finishedTodos.push(this.todos[this.editIndex]);
+			this.todos.splice(this.editIndex, 1);
+			this.dialogDelete = false;
+			this.editIndex = -1;
         },
         hapusAll(){
             this.todos = this.todos.filter(del=>!this.selected.includes(del));
